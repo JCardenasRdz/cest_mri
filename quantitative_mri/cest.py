@@ -2,6 +2,10 @@ import numpy as np
 from scipy.optimize import least_squares
 from numpy.random import uniform
 
+def sim_offsets(initial,last,steps):
+    offsets = np.linspace(initial,last,steps)
+    offsets = np.squeeze(offsets)
+
 def Lorentzian(pars,xdata_):
     """
     Lorentzian function for a single pool
@@ -32,7 +36,7 @@ def lorentzian_sim(xdata, Amp, Width, Center):
     num_pools = int(Num_variables/3)
 
     # Preallocate output
-    Lsum = np.zeros( (xdata.shape[0],1))
+    Lsum = np.zeros( (xdata.shape[0]))
 
     for idx in range(num_pools):
         # assign each variable
@@ -45,6 +49,14 @@ def lorentzian_sim(xdata, Amp, Width, Center):
     return Lsum
 
 def lorentzian_fit(x_data,experimental_data,initial_guess_offsets,repetitions = 10):
+    """
+    lorentzian_fit(x_data,experimental_data,initial_guess_offsets)
+
+    returns:
+    x_pred, Z_predicted, x_results
+    """
+
+
     # correct xdata for B0 shift
     x_data = x_data - x_data[np.argmax(experimental_data)]
     initial_guess_offsets = np.array(initial_guess_offsets)
@@ -70,9 +82,9 @@ def lorentzian_fit(x_data,experimental_data,initial_guess_offsets,repetitions = 
         x_results[:,i] = pars_predicted
     x_pred = np.mean(x_results,axis=1)
     Z_predicted = L(np.mean(x_results,axis=1))
-    return x_pred, Z_predicted
+    return x_pred, Z_predicted, x_results
 
-def build_limits(initial_guess_offsets):
+def _build_limits(initial_guess_offsets):
     x0 = np.array(initial_guess_offsets)
     x0 = x0.astype(float)
     np.place(x0,x0==0,[0.1])
